@@ -1,4 +1,4 @@
 (test
- (name brainfuck)
- (modules brainfuck)
+ (name main_test)
+ (modules main_test parser_test)
  (libraries brainfuck alcotest))
