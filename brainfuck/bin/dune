@@ -1,0 +1,5 @@
+(executable
+ (modes byte exe)
+ (public_name brainfuck)
+ (name main)
+ (libraries brainfuck))
