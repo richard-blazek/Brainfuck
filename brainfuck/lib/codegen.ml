@@ -4,47 +4,41 @@ let encode_int16 i = encode_int8 i ^ encode_int8 (i lsr 8)
 let encode_int32 i = encode_int16 i ^ encode_int16 (i lsr 16)
 let encode_int64 i = encode_int32 i ^ encode_int32 (i lsr 32)
 
-(* output integer encoded as little endian *)
-let output_int8 file i = output_string file (encode_int8 i)
-let output_int16 file i = output_string file (encode_int16 i)
-let output_int32 file i = output_string file (encode_int32 i)
-let output_int64 file i = output_string file (encode_int64 i)
-
 let elf_header_size = 0x40
 let program_header_size = 0x38
 let program_entry_point = 1 lsl 17
 
-let write_elf_header file =
-  output_string file "\x7FELF"; (* Magic bytes *)
-  output_int8 file 2; (* 64-bit format *)
-  output_int8 file 1; (* little endian *)
-  output_int8 file 1; (* ELF version *)
-  output_int8 file 3; (* Linux *)
-  output_int8 file 0; (* ABI version, not used on Linux *)
-  output_string file "\x00\x00\x00\x00\x00\x00\x00"; (* 7 bytes of padding *)
-  output_int16 file 2; (* Executable file *)
-  output_int16 file 0x3E; (* CPU x86-64 *)
-  output_int32 file 1; (* ELF version again *)
-  output_int64 file program_entry_point;
-  output_int64 file 0x40; (* Program header table position: after header *)
-  output_int64 file 0; (* Section header table position: none *)
-  output_int32 file 0; (* e_flags *)
-  output_int16 file elf_header_size;
-  output_int16 file program_header_size;
-  output_int16 file 0x02; (* Program header count: code and data *)
-  output_int16 file 0x40; (* Section header size *)
-  output_int16 file 0; (* Section header count: none *)
-  output_int16 file 0 (* e_shstrndx *)
+let elf_header =
+  "\x7FELF" ^ (* Magic bytes *)
+  encode_int8 2 ^ (* 64-bit format *)
+  encode_int8 1 ^ (* little endian *)
+  encode_int8 1 ^ (* ELF version *)
+  encode_int8 3 ^ (* Linux *)
+  encode_int8 0 ^ (* ABI version, not used on Linux *)
+  "\x00\x00\x00\x00\x00\x00\x00" ^ (* 7 bytes of padding *)
+  encode_int16 2 ^ (* Executable file *)
+  encode_int16 0x3E ^ (* CPU x86-64 *)
+  encode_int32 1 ^ (* ELF version again *)
+  encode_int64 program_entry_point ^
+  encode_int64 0x40 ^ (* Program header table position: after header *)
+  encode_int64 0 ^ (* Section header table position: none *)
+  encode_int32 0 ^ (* e_flags *)
+  encode_int16 elf_header_size ^
+  encode_int16 program_header_size ^
+  encode_int16 0x02 ^ (* Program header count: code and data *)
+  encode_int16 0x40 ^ (* Section header size *)
+  encode_int16 0 ^ (* Section header count: none *)
+  encode_int16 0 (* e_shstrndx *)
 
-let write_program_header file offset_file size_file offset_mem size_mem =
-  output_int32 file 1; (* loadable segment *)
-  output_int32 file 7; (* read+write+execute *)
-  output_int64 file offset_file; (* offset in the file image *)
-  output_int64 file offset_mem; (* address in the memory *)
-  output_int64 file 0; (* p_paddr *)
-  output_int64 file size_file; (* size of the segment in the file image, may be 0 *)
-  output_int64 file size_mem; (* size of the segment in the memory, may be 0 *)
-  output_int64 file 0 (* no alignment *)
+let program_header offset_file size_file offset_mem size_mem =
+  encode_int32 1 ^ (* loadable segment *)
+  encode_int32 7 ^ (* read+write+execute *)
+  encode_int64 offset_file ^ (* offset in the file image *)
+  encode_int64 offset_mem ^ (* address in the memory *)
+  encode_int64 0 ^ (* p_paddr *)
+  encode_int64 size_file ^ (* size of the segment in the file image, may be 0 *)
+  encode_int64 size_mem ^ (* size of the segment in the memory, may be 0 *)
+  encode_int64 0 (* no alignment *)
 
 module Instructions = struct
   let initialise =
@@ -113,16 +107,14 @@ let rec compile_cmds = function
   compile_cmds rest
 
 let compile cmds =
-  Instructions.initialise ^ compile_cmds cmds ^ Instructions.terminate
+  let program = Instructions.initialise ^ compile_cmds cmds ^ Instructions.terminate in
+  let program_len = String.length program in
+  elf_header ^
+  program_header 0 0 0 (1 lsl 16) ^ (* Data section, 2^16 bytes from 0 to 65535 *)
+  program_header (elf_header_size + 2 * program_header_size) program_len program_entry_point program_len ^
+  program
 
 let generate cmds filename =
   let file = open_out_bin filename in
-  let program = compile cmds in
-  write_elf_header file;
-  (* Data section, 2^16 bytes from 0 to 65535 *)
-  write_program_header file 0 0 0 (1 lsl 16);
-  (* Program section, s 2^16 bytes from 0 to 65535 *)
-  write_program_header file (elf_header_size + program_header_size) (String.length program) program_entry_point (String.length program);
-  (* Write actual program *)
-  output_string file program;
+  output_string file (compile cmds);
   close_out file
