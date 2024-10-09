@@ -1,9 +1,12 @@
 type tape = int list * int * int list
 
+let modulo n d = let rem = n mod d in (rem + d) mod d
+
 let empty = [], 0, []
-let current (_, this, _) = this
-let add (l, this, r) = l, this + 1, r
-let sub (l, this, r) = l, this - 1, r
+let get (_, this, _) = this
+let put value (l, _, r) = l, modulo value 256, r
+let add (l, this, r) = l, modulo (this + 1) 256, r
+let sub (l, this, r) = l, modulo (this - 1) 256, r
 
 let right (l, this, r) = match r with
 | [] -> this :: l, 0, []

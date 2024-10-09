@@ -9,5 +9,6 @@ let () =
       "Tape", [
         test_case "add/sub"   `Quick Tape_test.test_add_sub;
         test_case "right/left"   `Quick Tape_test.test_right_left;
+        test_case "get/put"   `Quick Tape_test.test_get_put;
       ];
     ]
