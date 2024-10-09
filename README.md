@@ -1,7 +1,12 @@
-# Brainfuck interpreter
-This is an interpreter for Brainfuck, a general-purpose programming language.
+# Brainfuck compiler and interpreter
+This is a compiler and an interpreter for Brainfuck, a general-purpose
+programming language. Interpreter can work on any platform where it compiles,
+the compiler generates ELF files for x86_64 Linux.
 
-## Features
+At the moment, compilation is not working as the generated ELF file always
+causes a segfault.
+
+## Why Brainfuck?
 - **Safety:**
     Brainfuck does not require manual memory management which eliminates many
     common security bugs.

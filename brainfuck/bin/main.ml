@@ -1,5 +1,6 @@
 open Brainfuck.Parser
 open Brainfuck.Tape
+open Brainfuck.Codegen
 
 let rec execute t = function
 | [] -> t
@@ -28,8 +29,7 @@ let read_file path =
   input_lines (open_in path)
 
 let () =
-  if Array.length Sys.argv == 2 then
-    let _ = execute empty (parse (read_file Sys.argv.(1))) in
-    ()
-  else
-    print_endline "Usage:\n    brainfuck <filename>"
+  match Array.length Sys.argv with
+  | 2 -> let _ = execute empty (parse (read_file Sys.argv.(1))) in ()
+  | 3 -> generate (parse (read_file Sys.argv.(1))) Sys.argv.(2)
+  | _ -> print_endline "Usage:\n    brainfuck <input-path> [<output-path>]"
