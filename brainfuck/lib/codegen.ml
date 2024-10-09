@@ -6,7 +6,7 @@ let encode_int64 i = encode_int32 i ^ encode_int32 (i lsr 32)
 
 let elf_header_size = 0x40
 let program_header_size = 0x38
-let program_entry_point = 1 lsl 17
+let memory_size = 0x10000
 
 let elf_header =
   "\x7FELF" ^ (* Magic bytes *)
@@ -19,7 +19,7 @@ let elf_header =
   encode_int16 2 ^ (* Executable file *)
   encode_int16 0x3E ^ (* CPU x86-64 *)
   encode_int32 1 ^ (* ELF version again *)
-  encode_int64 program_entry_point ^
+  encode_int64 memory_size ^
   encode_int64 0x40 ^ (* Program header table position: after header *)
   encode_int64 0 ^ (* Section header table position: none *)
   encode_int32 0 ^ (* e_flags *)
@@ -45,9 +45,9 @@ module Instructions = struct
     "\x48\x31\xf6" (* set rsi to zero *)
 
   let terminate =
-    "\x48\x8b\x04\x25\x3c\x00\x00\x00" ^ (* put syscall number 60 to rax *)
-    "\x48\x31\xff" ^                     (* put the success code 0 to rdi *)
-    "\x0f\x05"                           (* syscall *)
+    "\xb8\x01\x00\x00\x00" ^ (* movl $1, %eax *)
+    "\x31\xdb" ^             (* xor %ebx, %ebx *)
+    "\xcd\x80"               (* int $0x80 *)
 
   let inc = "\xfe\x06" (* incb (%rsi) *)
 
@@ -104,8 +104,8 @@ let compile cmds =
   let program = Instructions.initialise ^ compile_cmds cmds ^ Instructions.terminate in
   let program_len = String.length program in
   elf_header ^
-  program_header 0 0 0 (1 lsl 16) ^ (* Data section, 2^16 bytes from 0 to 65535 *)
-  program_header (elf_header_size + 2 * program_header_size) program_len program_entry_point program_len ^
+  program_header 0 0 0 memory_size ^
+  program_header (elf_header_size + 2 * program_header_size) program_len memory_size program_len ^
   program
 
 let generate cmds filename =
