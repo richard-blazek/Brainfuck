@@ -49,15 +49,9 @@ module Instructions = struct
     "\x48\x31\xff" ^                     (* put the success code 0 to rdi *)
     "\x0f\x05"                           (* syscall *)
 
-  let inc =
-    "\x8a\x06" ^ (* load [rsi] to al *)
-    "\xfe\xc0" ^ (* inc al *)
-    "\x88\x06"   (* store al to [rsi] *)
+  let inc = "\xfe\x06" (* incb (%rsi) *)
 
-  let dec =
-    "\x8a\x06" ^ (* load [rsi] to al *)
-    "\xfe\xc8" ^ (* inc al *)
-    "\x88\x06"   (* store al to [rsi] *)
+  let dec = "\xfe\x0e" (* decb (%rsi) *)
 
   let right =
     "\x48\xff\xc6" ^                     (* inc rsi *)
