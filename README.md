@@ -4,7 +4,7 @@ programming language. Interpreter can work on any platform where it compiles,
 the compiler generates ELF files for x86_64 Linux.
 
 At the moment, compilation is not working as the generated ELF file always
-causes a segfault.
+causes a segfault. Interpreter is finished and working.
 
 ## Why Brainfuck?
 - **Safety:**
