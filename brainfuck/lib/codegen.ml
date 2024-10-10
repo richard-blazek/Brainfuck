@@ -50,24 +50,17 @@ let program_header_data =
   encode_int32 0x1000 (* alignment *)
 
 module Instructions = struct
-  let initialise = "\x31\xf6" (* xor esi, esi *)
+  let initialise = "\xbe" ^ encode_int32 data_offset (* mov esi, data_offset *)
 
   let terminate =
     "\x31\xc0\x40" ^ (* xor eax, eax; inc eax *)
     "\x31\xdb" ^     (* xor ebx, ebx *)
     "\xcd\x80"       (* int 0x80 *)
 
-  let inc = "\xfe\x06" (* inc byte[esi] *)
-
-  let dec = "\xfe\x0e" (* dec byte[esi] *)
-
-  let right =
-    "\x46" ^                     (* inc esi *)
-    "\x81\xe6\xff\xff\x00\x00"   (* and esi, 0xFFFF *)
-
-  let left =
-    "\x4e" ^                     (* dec esi *)
-    "\x81\xe6\xff\xff\x00\x00"   (* and esi, 0xFFFF *)
+  let inc = "\xfe\x06"       (* inc byte[esi] *)
+  let dec = "\xfe\x0e"       (* dec byte[esi] *)
+  let right = "\x66\x46"     (* inc si *)
+  let left = "\x66\x4e"      (* dec si *)
 
   let put =
     "\xb8\x04\x00\x00\x00" ^ (* mov eax, 4 *)
