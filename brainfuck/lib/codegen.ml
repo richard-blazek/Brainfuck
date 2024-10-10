@@ -6,7 +6,7 @@ let encode_int32 i = encode_int16 i ^ encode_int16 (i lsr 16)
 let elf_header_size = 0x34
 let program_header_size = 0x20
 let code_offset = 0x20000000
-let data_offset = 0x10000000
+let data_offset = 0x40000000
 let data_length = 0x00010000
 
 let elf_header =
