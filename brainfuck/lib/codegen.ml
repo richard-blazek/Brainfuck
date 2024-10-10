@@ -3,9 +3,11 @@ let encode_int8 i = String.make 1 (Char.chr (i land 255))
 let encode_int16 i = encode_int8 i ^ encode_int8 (i lsr 8)
 let encode_int32 i = encode_int16 i ^ encode_int16 (i lsr 16)
 
-let elf_header_size = 52
-let program_header_size = 32
-let memory_size = 0x10000
+let elf_header_size = 0x34
+let program_header_size = 0x20
+let code_offset = 0x20000000
+let data_offset = 0x10000000
+let data_length = 0x00010000
 
 let elf_header =
   "\x7FELF" ^ (* Magic bytes *)
@@ -16,7 +18,7 @@ let elf_header =
   encode_int16 2 ^ (* Executable file *)
   encode_int16 3 ^ (* CPU x86 *)
   encode_int32 1 ^ (* ELF version again *)
-  encode_int32 memory_size ^
+  encode_int32 (code_offset + elf_header_size + program_header_size * 2) ^ (* Entry point *)
   encode_int32 elf_header_size ^ (* Program header table position: after header *)
   encode_int32 0 ^ (* Section header table position: none *)
   encode_int32 0 ^ (* e_flags *)
@@ -27,21 +29,31 @@ let elf_header =
   encode_int16 0 ^ (* Section header count: none *)
   encode_int16 0 (* e_shstrndx *)
 
-let program_header offset_file size_file offset_mem size_mem =
+let program_header_code size =
   encode_int32 1 ^ (* loadable segment *)
-  encode_int32 offset_file ^ (* offset in the file image *)
-  encode_int32 offset_mem ^ (* address in the memory *)
-  encode_int32 0 ^ (* p_paddr *)
-  encode_int32 size_file ^ (* size of the segment in the file image, may be 0 *)
-  encode_int32 size_mem ^ (* size of the segment in the memory, may be 0 *)
-  encode_int32 7 ^ (* read+write+execute *)
-  encode_int32 0x10000 (* alignment *)
+  encode_int32 0 ^ (* offset in the file image *)
+  encode_int32 code_offset ^ (* address in the memory *)
+  encode_int32 code_offset ^ (* p_paddr *)
+  encode_int32 size ^ (* size of the segment in the file image, may be 0 *)
+  encode_int32 size ^ (* size of the segment in the memory, may be 0 *)
+  encode_int32 5 ^ (* read+execute *)
+  encode_int32 0x1000 (* alignment *)
+
+let program_header_data =
+  encode_int32 1 ^ (* loadable segment *)
+  encode_int32 0 ^ (* offset in the file image *)
+  encode_int32 data_offset ^ (* address in the memory *)
+  encode_int32 data_offset ^ (* p_paddr *)
+  encode_int32 0 ^ (* size of the segment in the file image, may be 0 *)
+  encode_int32 data_length ^ (* size of the segment in the memory, may be 0 *)
+  encode_int32 6 ^ (* read+write *)
+  encode_int32 0x1000 (* alignment *)
 
 module Instructions = struct
   let initialise = "\x31\xf6" (* xor esi, esi *)
 
   let terminate =
-    "\xc1\xc0\x40" ^ (* xor eax, eax; inc eax *)
+    "\x31\xc0\x40" ^ (* xor eax, eax; inc eax *)
     "\x31\xdb" ^     (* xor ebx, ebx *)
     "\xcd\x80"       (* int 0x80 *)
 
@@ -102,8 +114,8 @@ let compile cmds =
   let program = Instructions.initialise ^ compile_cmds cmds ^ Instructions.terminate in
   let program_len = String.length program in
   elf_header ^
-  program_header 0 0 0 memory_size ^
-  program_header (elf_header_size + 2 * program_header_size) program_len memory_size program_len ^
+  program_header_code (program_len + elf_header_size + program_header_size) ^
+  program_header_data ^
   program
 
 let generate cmds filename =
