@@ -1,10 +1,6 @@
 # Brainfuck compiler and interpreter
-This is a compiler and an interpreter for Brainfuck, a general-purpose
-programming language. Interpreter can work on any platform where it compiles,
-the compiler generates ELF files for x86 Linux.
-
-At the moment, compilation is not working as the generated ELF file always
-causes a segfault. Interpreter is finished and working.
+This is a compiler and an interpreter for Brainfuck, an immortal general-purpose
+programming language. The compiler generates ELF files for x86 Linux.
 
 ## Why Brainfuck?
 - **Safety:**
