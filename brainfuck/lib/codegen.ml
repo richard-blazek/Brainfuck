@@ -107,7 +107,7 @@ let compile cmds =
   let program = Instructions.initialise ^ compile_cmds cmds ^ Instructions.terminate in
   let program_len = String.length program in
   elf_header ^
-  program_header_code (program_len + elf_header_size + program_header_size) ^
+  program_header_code (program_len + elf_header_size + program_header_size * 2) ^
   program_header_data ^
   program
 
