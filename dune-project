@@ -6,7 +6,7 @@
  (name brainfuck)
  (authors "Richard Blažek")
  (maintainers "Richard Blažek")
- (synopsis "Brainfuck interpreter")
+ (synopsis "Brainfuck compiler and interpreter")
  (depends
   ocaml
   dune
