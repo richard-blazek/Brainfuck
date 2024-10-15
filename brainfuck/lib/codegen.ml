@@ -11,7 +11,7 @@ let data_length = 0x00010000
 
 let elf_header =
   "\x7FELF" ^ (* Magic bytes *)
-  encode_int8 1 ^ (* 64-bit format *)
+  encode_int8 1 ^ (* 32-bit format *)
   encode_int8 1 ^ (* little endian *)
   encode_int8 1 ^ (* ELF version *)
   "\x00\x00\x00\x00\x00\x00\x00\x00\x00" ^ (* 9 bytes of padding *)
