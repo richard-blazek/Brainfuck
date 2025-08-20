@@ -1,5 +1,9 @@
 (executable
- (modes byte exe)
- (public_name brainfuck)
  (name main)
- (libraries brainfuck))
+ (modes byte)
+ (preprocess (pps js_of_ocaml-ppx))
+ (libraries brainfuck js_of_ocaml))
+
+(rule
+ (target main.js)
+ (action (run js_of_ocaml %{dep:main.bc} -o %{target})))

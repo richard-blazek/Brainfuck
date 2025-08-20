@@ -29,7 +29,8 @@ let read_file path =
   input_lines (open_in path)
 
 let () =
-  match Array.length Sys.argv with
-  | 2 -> let _ = execute empty (parse (read_file Sys.argv.(1))) in ()
-  | 3 -> generate (parse (read_file Sys.argv.(1))) Sys.argv.(2)
-  | _ -> print_endline "Usage:\n    brainfuck <input-path> [<output-path>]"
+  Js_of_ocaml.Js.export "brainfuck"
+    (object%js
+       method hello name =
+         Js_of_ocaml.Js.string (compile (parse (Js_of_ocaml.Js.to_string name)))
+    end)
