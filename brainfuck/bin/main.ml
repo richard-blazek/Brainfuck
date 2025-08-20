@@ -2,6 +2,8 @@ open Brainfuck.Parser
 open Brainfuck.Tape
 open Brainfuck.Codegen
 
+open Js_of_ocaml
+
 let rec execute t = function
 | [] -> t
 | Add :: rest -> execute (add t) rest
@@ -28,9 +30,12 @@ let read_file path =
       "" in
   input_lines (open_in path)
 
+let uint8array_of_string (b : string) : Typed_array.uint8Array Js.t =
+  Typed_array.Bytes.to_uint8Array (Bytes.of_string b)
+
 let () =
-  Js_of_ocaml.Js.export "brainfuck"
+  Js.export "brainfuck"
     (object%js
-       method hello name =
-         Js_of_ocaml.Js.string (compile (parse (Js_of_ocaml.Js.to_string name)))
+       method compile name =
+         uint8array_of_string (compile (parse (Js.to_string name)))
     end)
